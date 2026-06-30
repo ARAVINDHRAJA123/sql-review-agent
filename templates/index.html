@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SQL Review Agent</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    .container { max-width: 860px; margin: 0 auto; }
+
+    header { margin-bottom: 2rem; }
+    header h1 { font-size: 1.6rem; font-weight: 700; color: #f8fafc; }
+    header p  { color: #94a3b8; margin-top: .3rem; font-size: .9rem; }
+
+    .card {
+      background: #1e2130;
+      border: 1px solid #2d3348;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    label { display: block; font-size: .85rem; color: #94a3b8; margin-bottom: .5rem; }
+
+    textarea {
+      width: 100%;
+      min-height: 180px;
+      background: #0f1117;
+      border: 1px solid #2d3348;
+      border-radius: 6px;
+      color: #e2e8f0;
+      font-family: "JetBrains Mono", "Fira Code", monospace;
+      font-size: .85rem;
+      padding: .75rem 1rem;
+      resize: vertical;
+      outline: none;
+    }
+    textarea:focus { border-color: #4f8ef7; }
+
+    .btn {
+      margin-top: 1rem;
+      background: #4f8ef7;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: .6rem 1.4rem;
+      font-size: .9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn:hover { background: #3a76e0; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    .error {
+      background: #3b1f1f;
+      border: 1px solid #7f2020;
+      border-radius: 6px;
+      padding: .75rem 1rem;
+      color: #f87171;
+      margin-bottom: 1.5rem;
+      font-size: .9rem;
+    }
+
+    /* ── Result ── */
+    .result-header {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin-bottom: 1.25rem;
+    }
+    .result-header h2 { font-size: 1.1rem; font-weight: 600; }
+
+    .badge {
+      display: inline-block;
+      border-radius: 4px;
+      padding: .2rem .6rem;
+      font-size: .75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .badge-none     { background: #1a3a2a; color: #4ade80; }
+    .badge-low      { background: #1e2f1e; color: #86efac; }
+    .badge-medium   { background: #3a2f10; color: #fbbf24; }
+    .badge-high     { background: #3a1f10; color: #fb923c; }
+    .badge-critical { background: #3b1010; color: #f87171; }
+
+    .cost-line {
+      font-size: .85rem;
+      color: #94a3b8;
+      margin-bottom: 1.25rem;
+    }
+    .cost-line span { color: #e2e8f0; font-weight: 600; }
+
+    .section-title {
+      font-size: .8rem;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: .6rem;
+      font-weight: 600;
+    }
+
+    .issue-list { list-style: none; margin-bottom: 1.25rem; }
+    .issue-item {
+      background: #161b2e;
+      border: 1px solid #2d3348;
+      border-radius: 6px;
+      padding: .75rem 1rem;
+      margin-bottom: .5rem;
+    }
+    .issue-top {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      margin-bottom: .3rem;
+    }
+    .issue-code   { font-family: monospace; font-size: .85rem; font-weight: 600; color: #f8fafc; }
+    .issue-msg    { font-size: .85rem; color: #94a3b8; }
+    .issue-fix    { font-size: .82rem; color: #60a5fa; margin-top: .3rem; }
+
+    .no-issues {
+      color: #4ade80;
+      font-size: .9rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .sql-block {
+      background: #0f1117;
+      border: 1px solid #2d3348;
+      border-radius: 6px;
+      padding: .75rem 1rem;
+      font-family: "JetBrains Mono", "Fira Code", monospace;
+      font-size: .82rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: #a5f3fc;
+      margin-bottom: 1.25rem;
+    }
+
+    .explanation {
+      font-size: .88rem;
+      color: #94a3b8;
+      line-height: 1.6;
+      border-left: 3px solid #4f8ef7;
+      padding-left: .9rem;
+    }
+
+    .spinner {
+      display: none;
+      width: 16px; height: 16px;
+      border: 2px solid #4f8ef7;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin-left: .5rem;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>SQL Review Agent</h1>
+    <p>Paste a BigQuery SELECT query. The agent dry-runs it, checks table schemas, flags issues, and rewrites it.</p>
+  </header>
+
+  {% if error %}
+  <div class="error">{{ error }}</div>
+  {% endif %}
+
+  <div class="card">
+    <form method="POST" action="/review" id="reviewForm">
+      <label for="sql">BigQuery SQL</label>
+      <textarea id="sql" name="sql" placeholder="SELECT * FROM `project.dataset.table`">{{ sql }}</textarea>
+      <button class="btn" type="submit" id="submitBtn">
+        Review SQL
+        <span class="spinner" id="spinner"></span>
+      </button>
+    </form>
+  </div>
+
+  {% if result %}
+  <div class="card">
+    <div class="result-header">
+      <h2>Review Result</h2>
+      <span class="badge badge-{{ result.severity }}">{{ result.severity }}</span>
+    </div>
+
+    <div class="cost-line">
+      Cost estimate:
+      <span>{{ "%.3f"|format(result.bytes_scanned_gb) }} GB</span>
+      &nbsp;≈&nbsp;
+      <span>${{ "%.6f"|format(result.estimated_cost_usd) }} USD</span>
+    </div>
+
+    {% if result.issues %}
+    <div class="section-title">Issues ({{ result.issues|length }})</div>
+    <ul class="issue-list">
+      {% for iss in result.issues %}
+      <li class="issue-item">
+        <div class="issue-top">
+          <span class="badge badge-{{ iss.severity }}">{{ iss.severity }}</span>
+          <span class="issue-code">{{ iss.code }}</span>
+        </div>
+        <div class="issue-msg">{{ iss.message }}</div>
+        {% if iss.suggestion %}
+        <div class="issue-fix">Fix: {{ iss.suggestion }}</div>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="no-issues">No issues found — SQL looks good!</div>
+    {% endif %}
+
+    {% if result.rewritten_sql and result.rewritten_sql.strip() != sql.strip() %}
+    <div class="section-title">Rewritten SQL</div>
+    <div class="sql-block">{{ result.rewritten_sql }}</div>
+    {% endif %}
+
+    {% if result.explanation %}
+    <div class="section-title">Explanation</div>
+    <div class="explanation">{{ result.explanation }}</div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div>
+<script>
+  document.getElementById("reviewForm").addEventListener("submit", () => {
+    document.getElementById("submitBtn").disabled = true;
+    document.getElementById("spinner").style.display = "inline-block";
+  });
+</script>
+</body>
+</html>
