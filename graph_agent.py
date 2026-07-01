@@ -26,6 +26,7 @@ from tools.sql_tools import analyze, extract_tables
 from agent import ReviewReport, TOOLS, _system, BQ_DATASET, ANTHROPIC_MODEL
 
 import anthropic
+from langfuse import observe
 
 
 # ── State ─────────────────────────────────────────────────────────────────────
@@ -144,6 +145,7 @@ _app = _build_graph()
 
 # ── Public interface ──────────────────────────────────────────────────────────
 
+@observe(name="sql_review_graph")
 def review_with_graph(sql: str, verbose: bool = False) -> ReviewReport:
     """Drop-in replacement for agent.review() using LangGraph."""
     from agent import is_read_only  # reuse the guard

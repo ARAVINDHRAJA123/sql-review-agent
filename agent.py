@@ -27,6 +27,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from langfuse import observe
+
 from tools.bq_tools import dry_run, get_table_metadata, is_read_only, PROJECT
 from tools.sql_tools import analyze, extract_tables, format_report
 
@@ -182,6 +184,7 @@ def _dispatch(tool_name: str, args: dict) -> dict:
 
 # ── Claude loop ───────────────────────────────────────────────────────────────
 
+@observe(name="llm_loop_anthropic")
 def _run_anthropic(sql: str, static_issues: list, tables: list[str],
                    verbose: bool, model: str | None) -> dict:
     import anthropic
@@ -241,6 +244,7 @@ def _run_anthropic(sql: str, static_issues: list, tables: list[str],
 
 # ── Gemini loop ───────────────────────────────────────────────────────────────
 
+@observe(name="llm_loop_gemini")
 def _run_gemini(sql: str, static_issues: list, tables: list[str],
                 verbose: bool, model: str | None) -> dict:
     import time
@@ -328,6 +332,7 @@ def _run_gemini(sql: str, static_issues: list, tables: list[str],
 
 # ── Public interface ──────────────────────────────────────────────────────────
 
+@observe(name="sql_review")
 def review(
     sql: str,
     verbose: bool = False,

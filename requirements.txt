@@ -6,3 +6,4 @@ mcp
 pytest>=8.0.0
 langgraph>=0.2
 langchain-core>=0.3
+langfuse>=4.0.0
