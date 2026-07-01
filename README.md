@@ -21,7 +21,7 @@ Paste a BigQuery SQL query and the agent:
 
 The agent is modelled as a LangGraph state machine:
 
-![Agent graph](docs/architecture_graph.png)
+![Agent graph](docs/architecture_graph.svg)
 
 - **call_llm** — sends messages + tools to Claude/Gemini
 - **run_tools** — dispatches `get_table_schema`, `dry_run_sql`, `write_report`
@@ -77,6 +77,8 @@ python agent.py --file query.sql --verbose
 
 ## Web UI
 
+![Web UI](docs/web_ui.png)
+
 ```bash
 python server.py
 # open http://localhost:5001
@@ -106,7 +108,8 @@ sql-review-agent/
 │   ├── test_tools.py ← 24 unit tests
 │   └── test_agent.py ← 7 unit tests
 └── docs/
-    └── architecture_graph.png  ← auto-generated from graph_agent.py
+    ├── architecture_graph.svg  ← state machine diagram
+    └── web_ui.png              ← Flask UI screenshot
 ```
 
 ---

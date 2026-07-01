@@ -1,0 +1,97 @@
+<svg viewBox="0 0 860 480" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+
+  <!-- Background -->
+  <rect width="860" height="480" fill="#0f1117" rx="16"/>
+
+  <!-- Header -->
+  <text x="430" y="42" text-anchor="middle" font-size="20" font-weight="800" fill="#f8fafc">SQL Review Agent — LangGraph State Machine</text>
+  <text x="430" y="64" text-anchor="middle" font-size="13" fill="#64748b">static analysis → LLM loop → rewrite → report</text>
+
+  <!-- ── ENTRY: SQL INPUT ── -->
+  <rect x="50" y="96" width="160" height="72" rx="10" fill="#1e2130" stroke="#334155" stroke-width="1.5"/>
+  <text x="130" y="122" text-anchor="middle" font-size="10" font-weight="700" letter-spacing="1.2" fill="#64748b">INPUT</text>
+  <text x="130" y="142" text-anchor="middle" font-size="14" font-weight="800" fill="#f8fafc">SQL Query</text>
+  <text x="130" y="158" text-anchor="middle" font-size="10.5" fill="#94a3b8">SELECT / WITH only</text>
+
+  <!-- arrow → static analysis -->
+  <line x1="210" y1="132" x2="248" y2="132" stroke="#475569" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <polygon points="248,127 260,132 248,137" fill="#475569"/>
+
+  <!-- ── STATIC ANALYSIS ── -->
+  <rect x="260" y="96" width="160" height="72" rx="10" fill="#1a2a1a" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="340" y="118" text-anchor="middle" font-size="10" font-weight="700" letter-spacing="1.2" fill="#22c55e">INSTANT · NO LLM</text>
+  <text x="340" y="138" text-anchor="middle" font-size="13" font-weight="800" fill="#f8fafc">Static Analysis</text>
+  <text x="340" y="156" text-anchor="middle" font-size="10" fill="#86efac">SELECT* · no partition · joins</text>
+
+  <!-- arrow → call_llm -->
+  <line x1="420" y1="132" x2="458" y2="132" stroke="#475569" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <polygon points="458,127 470,132 458,137" fill="#475569"/>
+
+  <!-- ── NODE: call_llm ── -->
+  <rect x="470" y="86" width="160" height="92" rx="12" fill="#1e2a4a" stroke="#4f8ef7" stroke-width="2"/>
+  <rect x="470" y="86" width="160" height="8" rx="6" fill="#4f8ef7"/>
+  <text x="550" y="112" text-anchor="middle" font-size="10" font-weight="700" letter-spacing="1.5" fill="#93c5fd">NODE</text>
+  <text x="550" y="133" text-anchor="middle" font-size="15" font-weight="800" fill="#f8fafc">call_llm</text>
+  <text x="550" y="153" text-anchor="middle" font-size="10" fill="#93c5fd">Claude · Gemini</text>
+  <text x="550" y="168" text-anchor="middle" font-size="10" fill="#64748b">get_schema · dry_run · write_report</text>
+
+  <!-- ── CONDITIONAL EDGE from call_llm ── -->
+  <!-- down arrow to run_tools -->
+  <line x1="550" y1="178" x2="550" y2="224" stroke="#4f8ef7" stroke-width="2"/>
+  <polygon points="544,224 550,238 556,224" fill="#4f8ef7"/>
+  <!-- label -->
+  <rect x="556" y="190" width="90" height="20" rx="4" fill="#1e2130"/>
+  <text x="601" y="204" text-anchor="middle" font-size="10" fill="#fbbf24">tool_calls?  yes</text>
+
+  <!-- right arrow to END -->
+  <line x1="630" y1="132" x2="710" y2="132" stroke="#22c55e" stroke-width="2"/>
+  <polygon points="710,127 722,132 710,137" fill="#22c55e"/>
+  <!-- label -->
+  <rect x="638" y="116" width="66" height="20" rx="4" fill="#1e2130"/>
+  <text x="671" y="130" text-anchor="middle" font-size="10" fill="#22c55e">write_report</text>
+
+  <!-- ── NODE: run_tools ── -->
+  <rect x="470" y="238" width="160" height="140" rx="12" fill="#2a1e3a" stroke="#a855f7" stroke-width="2"/>
+  <rect x="470" y="238" width="160" height="8" rx="6" fill="#a855f7"/>
+  <text x="550" y="264" text-anchor="middle" font-size="10" font-weight="700" letter-spacing="1.5" fill="#d8b4fe">NODE</text>
+  <text x="550" y="284" text-anchor="middle" font-size="15" font-weight="800" fill="#f8fafc">run_tools</text>
+  <!-- tool list -->
+  <rect x="484" y="294" width="132" height="18" rx="4" fill="#1e1228"/>
+  <text x="550" y="307" text-anchor="middle" font-size="10.5" fill="#c4b5fd">get_table_schema</text>
+  <rect x="484" y="316" width="132" height="18" rx="4" fill="#1e1228"/>
+  <text x="550" y="329" text-anchor="middle" font-size="10.5" fill="#c4b5fd">dry_run_sql</text>
+  <rect x="484" y="338" width="132" height="18" rx="4" fill="#1e1228"/>
+  <text x="550" y="351" text-anchor="middle" font-size="10.5" fill="#c4b5fd">write_report</text>
+  <text x="550" y="372" text-anchor="middle" font-size="10" fill="#64748b">BQ read-only · safe dispatch</text>
+
+  <!-- loop arrow: run_tools → call_llm (curved left side) -->
+  <path d="M 470 308 Q 390 308 390 132 Q 390 86 470 86" fill="none" stroke="#a855f7" stroke-width="1.8" stroke-dasharray="6,3"/>
+  <polygon points="466,81 470,86 474,91" fill="#a855f7"/>
+  <rect x="348" y="194" width="60" height="20" rx="4" fill="#1e2130"/>
+  <text x="378" y="208" text-anchor="middle" font-size="10" fill="#a855f7">loop back</text>
+
+  <!-- ── NODE: __end__ ── -->
+  <rect x="722" y="96" width="116" height="72" rx="12" fill="#1a2a1a" stroke="#22c55e" stroke-width="2"/>
+  <rect x="722" y="96" width="116" height="8" rx="6" fill="#22c55e"/>
+  <text x="780" y="120" text-anchor="middle" font-size="10" font-weight="700" letter-spacing="1.5" fill="#86efac">OUTPUT</text>
+  <text x="780" y="140" text-anchor="middle" font-size="14" font-weight="800" fill="#f8fafc">ReviewReport</text>
+  <text x="780" y="158" text-anchor="middle" font-size="10" fill="#86efac">severity · cost · rewrite</text>
+
+  <!-- ── STATE box ── -->
+  <rect x="50" y="290" width="340" height="150" rx="12" fill="#1e2130" stroke="#334155" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="220" y="316" text-anchor="middle" font-size="10" font-weight="700" letter-spacing="1.5" fill="#64748b">SHARED STATE  (flows through every node)</text>
+  <!-- state fields -->
+  <text x="70" y="340" font-size="11" fill="#94a3b8"><tspan font-weight="700" fill="#f8fafc">messages</tspan>   conversation history (auto-appended)</text>
+  <text x="70" y="360" font-size="11" fill="#94a3b8"><tspan font-weight="700" fill="#f8fafc">sql</tspan>         original query string</text>
+  <text x="70" y="380" font-size="11" fill="#94a3b8"><tspan font-weight="700" fill="#f8fafc">schemas</tspan>     table metadata from BigQuery</text>
+  <text x="70" y="400" font-size="11" fill="#94a3b8"><tspan font-weight="700" fill="#f8fafc">report_args</tspan> rewritten SQL + explanation</text>
+  <text x="70" y="424" font-size="10" fill="#475569">TypedDict with Annotated[list, add_messages] — LangGraph manages merges</text>
+
+  <!-- ── TRIGGER MODES ── -->
+  <rect x="50" y="192" width="160" height="84" rx="10" fill="#1e2130" stroke="#334155" stroke-width="1.5"/>
+  <text x="130" y="214" text-anchor="middle" font-size="10" font-weight="700" letter-spacing="1.2" fill="#64748b">TRIGGER MODES</text>
+  <text x="70" y="234" font-size="11" fill="#94a3b8">⌘  CLI  —  agent.py --sql</text>
+  <text x="70" y="252" font-size="11" fill="#94a3b8">🌐  Web  —  server.py :5001</text>
+  <text x="70" y="270" font-size="11" fill="#94a3b8">🔌  MCP  —  mcp_server.py</text>
+
+</svg>
