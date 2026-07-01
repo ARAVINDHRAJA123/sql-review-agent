@@ -1,9 +1,7 @@
 # SQL Review Agent
 
-An agentic AI system that reviews BigQuery SQL queries before you run them — catching
-performance issues, estimating cost, and suggesting rewrites.
-
-> **Work in progress.** Building incrementally — check back for updates.
+An agentic AI system that reviews BigQuery SQL queries before you run them —
+catching performance issues, estimating cost, and suggesting rewrites.
 
 ---
 
@@ -11,43 +9,33 @@ performance issues, estimating cost, and suggesting rewrites.
 
 Paste a BigQuery SQL query and the agent:
 
-1. **Dry-runs it** — gets the estimated bytes scanned (= cost) without executing
-2. **Reads your schema** — understands partition keys, clustering, column types
-3. **Flags issues** — full table scans, missing partition filters, cartesian joins, `SELECT *`
-4. **Suggests a rewrite** — returns improved SQL with explanation
-5. **Reports severity** — low / medium / high / critical
+1. **Static analysis** — instantly flags `SELECT *`, missing partition filters, cartesian joins
+2. **Schema fetch** — reads partition keys, clustering fields, and row counts from BigQuery
+3. **Cost estimate** — dry-runs the query to get bytes scanned without executing it
+4. **Rewrite** — returns improved SQL with a plain-English explanation
+5. **Severity rating** — `none` / `low` / `medium` / `high` / `critical`
 
-```
-Input SQL
-    │
-    ▼
-dry_run()          get_schema()
-→ bytes scanned    → partition keys, types, row count
-    │
-    ▼
-Issue detection + rewrite suggestion
-    │
-    ▼
-ReviewReport (cost · issues · rewritten SQL · severity)
-```
+---
+
+## Architecture
+
+The agent is modelled as a LangGraph state machine:
+
+![Agent graph](docs/architecture_graph.png)
+
+- **call_llm** — sends messages + tools to Claude/Gemini
+- **run_tools** — dispatches `get_table_schema`, `dry_run_sql`, `write_report`
+- **route** — conditional edge: loop back if tool calls remain, stop when `write_report` is called
 
 ---
 
 ## Three trigger modes
 
-- **CLI** — `python agent.py --sql "SELECT * FROM ..."`
-- **Web UI** — paste SQL in browser, see review results
-- **MCP** — any MCP-compatible client (Claude Code, OpenClaw, Cursor, Zed)
-
----
-
-## Stack
-
-- **Claude / Gemini** — LLM provider (auto-detected, free Gemini supported)
-- **BigQuery** — `dry_run` for cost estimation, schema introspection
-- **Flask** — web UI
-- **FastMCP** — MCP server
-- **pytest** — test suite
+| Mode | How |
+|---|---|
+| CLI | `python agent.py --sql "SELECT * FROM ..."` |
+| Web UI | `python server.py` → open `localhost:5001` |
+| MCP | Any MCP-compatible client (Claude Code, Cursor, Zed, OpenClaw) |
 
 ---
 
@@ -61,10 +49,44 @@ pip install -r requirements.txt
 
 export GCP_PROJECT=your-project
 export BQ_LOCATION=asia-south1
-export GEMINI_API_KEY=your-key   # free: aistudio.google.com
+export GEMINI_API_KEY=your-key     # free tier: aistudio.google.com
 # or: export ANTHROPIC_API_KEY=your-key
 
 gcloud auth application-default login
+```
+
+### MCP (Claude Code)
+
+```bash
+claude mcp add -s user sql-review -- \
+  /path/to/venv/bin/python /path/to/mcp_server.py
+```
+
+Tools available in any MCP client:
+- `review_sql` — full agentic review (LLM + BQ)
+- `quick_check` — instant static analysis, no LLM needed
+
+---
+
+## CLI usage
+
+```bash
+python agent.py --sql "SELECT * FROM \`project.dataset.table\`"
+python agent.py --file query.sql --verbose
+```
+
+## Web UI
+
+```bash
+python server.py
+# open http://localhost:5001
+```
+
+## Tests
+
+```bash
+pytest
+pytest tests/test_tools.py -v
 ```
 
 ---
@@ -73,13 +95,22 @@ gcloud auth application-default login
 
 ```
 sql-review-agent/
-├── agent.py          ← agentic review loop (coming Day 3)
-├── server.py         ← Flask web UI (coming Day 4)
-├── mcp_server.py     ← FastMCP server (coming Day 5)
+├── agent.py          ← raw tool-use loop (Claude + Gemini)
+├── graph_agent.py    ← LangGraph state machine (drop-in replacement)
+├── mcp_server.py     ← FastMCP server (review_sql + quick_check tools)
+├── server.py         ← Flask web UI + JSON API
 ├── tools/
-│   ├── bq_tools.py   ← dry_run, schema, metadata (coming Day 2)
-│   └── sql_tools.py  ← SQL parsing helpers (coming Day 2)
+│   ├── bq_tools.py   ← dry_run, schema, metadata, read-only guard
+│   └── sql_tools.py  ← static analysis, table extraction
 ├── tests/
-├── docs/
-└── requirements.txt
+│   ├── test_tools.py ← 24 unit tests
+│   └── test_agent.py ← 7 unit tests
+└── docs/
+    └── architecture_graph.png  ← auto-generated from graph_agent.py
 ```
+
+---
+
+## Stack
+
+Python · BigQuery · Claude API · Gemini API · LangGraph · FastMCP · Flask · pytest

@@ -4,3 +4,5 @@ google-cloud-bigquery
 flask>=3.0.0
 mcp
 pytest>=8.0.0
+langgraph>=0.2
+langchain-core>=0.3
